@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from collections import deque
 from typing import Callable
 
+postfix = []    # global list to store postfix format
 
 @dataclass
 class Operator:
@@ -54,12 +55,15 @@ def left_parenthesis(numbers, operations):
 
 
 def right_parenthesis(numbers, operations):
+    global postfix
     # perform all operations since the last left parenthesis
     operation = operator_stack.pop()
 
     while operation != "(":
+        postfix.append(operation)
         operators[operation].operation(number_stack, operator_stack)
         operation = operator_stack.pop()
+
 
 
 # https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_Precedence
@@ -97,9 +101,9 @@ if __name__ == '__main__':
     operator_stack = deque()
     number_stack = deque()
 
-    input_string = "((((((2+7)*8*7)-3-9)*(9-2)+9*6)*((2-3)+5-7)-4+3)*(((8-6)-4+3)-7-2)*(1-1)*5+4)*((((((6+8)%9-6)%8%4)%(3%8)-1-5)+((6+2)%9+1)+7-1)-(((7%8)-4-9)-7-5)-(4+7)+6-3)*((((((3+7)-1*5)+3-2)*(6-5)*9-2)*((9-7)*5-4)-9+9)+(((4*7)*1/7)+9*3)+(6-4)*3/1+2^3^2+2^3^2)/((((((5+5)/5-5)-5/5)+(5-5)-5*5)+((5/5)+5/5)/5*5)*(((5+5)-5-5)+5+5)*(5-5)/5+5)/((((((2+1)/3+3)/1+2)+(2+1)+2+1)/((2/1)+3/3)+2+3)/(((3+1)/2+1)/2+3)/(1/2)+2+1)/((((((8+9)%8%4)%8%1)+(1%6)%4+8)+((4%2)+8+8)%1+2)+(((1%1)+4+8)+6+5)%(2%7)+1%5)/((((9+9)-8-9)+8-8)*(9-8)+9*8)"
+    infix = "((((((2+7)*8*7)-3-9)*(9-2)+9*6)*((2-3)+5-7)-4+3)*(((8-6)-4+3)-7-2)*(1-1)*5+4)*((((((6+8)%9-6)%8%4)%(3%8)-1-5)+((6+2)%9+1)+7-1)-(((7%8)-4-9)-7-5)-(4+7)+6-3)*((((((3+7)-1*5)+3-2)*(6-5)*9-2)*((9-7)*5-4)-9+9)+(((4*7)*1/7)+9*3)+(6-4)*3/1+2^3^2+2^3^2)/((((((5+5)/5-5)-5/5)+(5-5)-5*5)+((5/5)+5/5)/5*5)*(((5+5)-5-5)+5+5)*(5-5)/5+5)/((((((2+1)/3+3)/1+2)+(2+1)+2+1)/((2/1)+3/3)+2+3)/(((3+1)/2+1)/2+3)/(1/2)+2+1)/((((((8+9)%8%4)%8%1)+(1%6)%4+8)+((4%2)+8+8)%1+2)+(((1%1)+4+8)+6+5)%(2%7)+1%5)/((((9+9)-8-9)+8-8)*(9-8)+9*8)"
 
-    for value, is_operator in get_next_syllable(input_string):
+    for value, is_operator in get_next_syllable(infix):
         if is_operator:
             # left parenthesis are only used for grouping. just store and 'wait' for the right parenthesis
             if value == "(":
@@ -109,16 +113,22 @@ if __name__ == '__main__':
             # if the operator on the stack has precedence over this operator it needs to be
             # executed before adding the new operator to the stack
             while len(operator_stack) > 0 and has_precendence(operator_stack[-1], value):
-                operation = operators[operator_stack.pop()]
-                operation.operation(number_stack, operator_stack)
+                operation = operator_stack.pop()
+                if operation != ')':
+                    postfix.append(operation)
+                operators[operation].operation(number_stack, operator_stack)
 
             operator_stack.append(value)
         else:
             number_stack.append(int(value))
+            postfix.append(value)
 
     # execute remaining operators on the stack
     while len(operator_stack) > 0:
-        operation = operators[operator_stack.pop()]
-        operation.operation(number_stack, operator_stack)
+        operation = operator_stack.pop()
+        if operation != ')':
+            postfix.append(operation)
+        operators[operation].operation(number_stack, operator_stack)
 
     print(f"Result = {number_stack[0]}")
+    print(" ".join(postfix))
