@@ -130,5 +130,46 @@ if __name__ == '__main__':
             postfix.append(operation)
         operators[operation].operation(number_stack, operator_stack)
 
+    print(f"Infix: {infix}")
     print(f"Result = {number_stack[0]}")
-    print(" ".join(postfix))
+
+    postfix_output = "".join(postfix)
+    print(f"Postfix: {postfix_output}")
+
+    # execute postfix
+    stack = deque()
+
+    for value, is_operator in get_next_syllable(postfix_output):
+        if is_operator:
+            # execute operator with values from stack
+            match value:
+                case '+':
+                    a = stack.pop()
+                    b = stack.pop()
+                    stack.append(b + a)
+                case '-':
+                    a = stack.pop()
+                    b = stack.pop()
+                    stack.append(b - a)
+                case '*':
+                    a = stack.pop()
+                    b = stack.pop()
+                    stack.append(b * a)
+                case '/':
+                    a = stack.pop()
+                    b = stack.pop()
+                    stack.append(b / a)
+                case '%':
+                    a = stack.pop()
+                    b = stack.pop()
+                    stack.append(b % a)
+                case '^':
+                    a = stack.pop()
+                    b = stack.pop()
+                    stack.append(b ** a)
+        else:
+            # store value on stack
+            stack.append(int(value))
+
+    print(f"Result = {stack[0]}")
+
