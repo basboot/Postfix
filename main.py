@@ -6,45 +6,53 @@ from typing import Callable
 @dataclass
 class Precedence:
     priority: int
-    operation: Callable[[deque], None]
+    operation: Callable[[deque, deque], None]
     ltr: bool = True
 
 
-def add(numbers):
+def add(numbers, operations):
     a = numbers.pop()
     b = numbers.pop()
     numbers.append(b + a)
 
-def sub(numbers):
+def sub(numbers, operations):
     a = numbers.pop()
     b = numbers.pop()
     numbers.append(b - a)
 
-def multiply(numbers):
+def multiply(numbers, operations):
     a = numbers.pop()
     b = numbers.pop()
     numbers.append(b * a)
 
-def divide(numbers):
+def divide(numbers, operations):
     a = numbers.pop()
     b = numbers.pop()
     numbers.append(b / a)
 
-def remainder(numbers):
+def remainder(numbers, operations):
     a = numbers.pop()
     b = numbers.pop()
     numbers.append(b % a)
 
-def power(numbers):
+def power(numbers, operations):
     a = numbers.pop()
     b = numbers.pop()
     numbers.append(b ** a)
 
-def leftbrace(numbers):
+def left_parenthesis(numbers, operations):
+    # do nothing
     pass
 
-def rightbrace(numbers):
-    pass
+def right_parenthesis(numbers, operations):
+    # perform all operations since the last left parenthesis
+    operation = operator_stack.pop()
+
+    while operation != "(":
+        print("perform within ()")
+        print(len(operator_stack))
+        operators[operation].operation(number_stack, operator_stack)
+        operation = operator_stack.pop()
 
 # https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_Precedence
 operators = {
@@ -54,8 +62,8 @@ operators = {
     '/': Precedence(13, divide, True),
     '%': Precedence(13, remainder, True),
     '^': Precedence(14, power, False),
-    '(': Precedence(19, leftbrace, True),  # True => n/a
-    ')': Precedence(19, rightbrace, True)
+    '(': Precedence(0, left_parenthesis, True),  # Special case, True => n/a
+    ')': Precedence(19, right_parenthesis, True)
 }
 
 operator_stack = deque()
@@ -78,7 +86,7 @@ def perform_operation():
 if __name__ == '__main__':
     print("Infix 2 Postfix")
 
-    input_string = "2 + 2 * 8 % 3 ^ 2"
+    input_string = "(1 + 2) * (3 + 1)"
 
     for value, is_operator in get_next_syllable(input_string):
         print("NEXT: ", value, is_operator)
@@ -86,13 +94,19 @@ if __name__ == '__main__':
             # if operator has precedence add it to the stack
             # else execute operators from the stack until it has precedence
             # TODO: fit ltr vs rtl
-            while len(operator_stack) > 0 and operators[value].priority <= operators[operator_stack[-1]].priority:
-                print("perform")
+            if value == "(":
+                print("store left bracket")
+                operator_stack.append(value)
+                print(operator_stack)
+                continue
+
+            while len(operator_stack) > 0 and (operators[value].priority <= operators[operator_stack[-1]].priority and operator_stack[-1] != "("):
+                print("perform operator")
                 print(len(operator_stack))
                 operation = operators[operator_stack.pop()]
-                operation.operation(number_stack)
+                operation.operation(number_stack, operator_stack)
             else:
-                print("keep")
+                print("store operator")
                 operator_stack.append(value)
         else:
             print("store number")
@@ -106,6 +120,6 @@ if __name__ == '__main__':
         print("perform remaining")
         print(len(operator_stack))
         operation = operators[operator_stack.pop()]
-        operation.operation(number_stack)
+        operation.operation(number_stack, operator_stack)
 
     print(f"Result = {number_stack[0]}")
