@@ -5,9 +5,9 @@ from typing import Callable
 
 @dataclass
 class Operator:
-    priority: int  # operator priority (higher will be performed first)
+    precedence: int  # operator priority (higher will be performed first)
     operation: Callable[[deque, deque], None]  # function to perform operation (number_stack, operation_stack)
-    ltr: bool = True  # associativity of the operator (left-to-right, right-to-left)
+    left_to_right: bool = True  # associativity of the operator (left-to-right, right-to-left)
 
 
 # Functions which perform the action for an operator using the number_stack for input and output
@@ -87,8 +87,8 @@ def get_next_syllable(input_string):
 def has_precendence(operator2, operator1):
     # operator1 has priority over operator2 if its priority is higher,
     # or if they have the same priority and their associativity is ltr
-    return operators[operator1].priority <= operators[operator2].priority if operators[operator1].ltr \
-        else operators[operator1].priority < operators[operator2].priority
+    return operators[operator1].precedence <= operators[operator2].precedence if operators[operator1].left_to_right \
+        else operators[operator1].precedence < operators[operator2].precedence
 
 
 if __name__ == '__main__':
